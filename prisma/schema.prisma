@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TrafficLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Driver {
+  id          Int          @id @default(autoincrement())
+  name        String
+  shiftHours  Float
+  pastWeek    String
+  assignments Assignment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deleted     Boolean      @default(false)
+}
+
+model Route {
+  id           Int          @id
+  distanceKm   Float
+  trafficLevel TrafficLevel
+  baseTimeMin  Int
+  orders       Order[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deleted      Boolean      @default(false)
+}
+
+model Order {
+  id              Int         @id
+  valueRs         Float
+  routeId         Int
+  deliveryTimeMin Int
+  route           Route       @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  assignment      Assignment?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deleted         Boolean     @default(false)
+
+  @@index([routeId])
+}
+
+model Assignment {
+  id               Int      @id @default(autoincrement())
+  orderId          Int      @unique
+  driverId         Int?
+  estimatedTimeMin Int
+  assignedAt       DateTime @default(now())
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver           Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  deleted          Boolean  @default(false)
+
+  @@index([driverId])
+}
