@@ -69,23 +69,9 @@ const formatTime = (date) => {
   });
 };
 
-const formatDuration = (minutes) => {
-  if (!minutes) return 'N/A';
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) {
-    return `${hours}h ${mins}m`;
-  }
-  return `${mins}m`;
-};
 
-const AssignmentsLoading = () => (
-  <LoadingSpinner 
-    size="lg" 
-    text="Loading assignments..." 
-    centered={true}
-  />
-);
+
+
 
 const EmptyState = () => (
   <div className="text-center py-12">
@@ -177,10 +163,7 @@ function AssignmentsTableContent() {
           aValue = a.order?.id || 0;
           bValue = b.order?.id || 0;
           break;
-        case 'estimatedTime':
-          aValue = a.estimatedTimeMin || 0;
-          bValue = b.estimatedTimeMin || 0;
-          break;
+
         case 'orderValue':
           aValue = a.order?.valueRs || 0;
           bValue = b.order?.valueRs || 0;
@@ -258,7 +241,6 @@ function AssignmentsTableContent() {
             <h3 className="text-lg font-medium text-gray-900">Assignments Overview</h3>
             <div className="mt-2 flex items-center space-x-6 text-sm text-gray-600">
               <span>Total Assignments: <span className="font-medium text-gray-900">{summary?.totalAssignments || 0}</span></span>
-              <span>Average Time: <span className="font-medium text-blue-600">{summary?.averageEstimatedTimeMin || 0} min</span></span>
               <span>Drivers Used: <span className="font-medium text-green-600">{summary?.assignmentsByDriver?.length || 0}</span></span>
             </div>
           </div>
@@ -306,8 +288,7 @@ function AssignmentsTableContent() {
             <SortableHeader field="order">Order Details</SortableHeader>
             <SortableHeader field="driver">Driver</SortableHeader>
             <Table.HeaderCell>Route Information</Table.HeaderCell>
-            <SortableHeader field="estimatedTime">Estimated Time</SortableHeader>
-            <Table.HeaderCell>Completion Time</Table.HeaderCell>
+
             <Table.HeaderCell>Status</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -377,31 +358,7 @@ function AssignmentsTableContent() {
                   <span className="text-gray-400">No route data</span>
                 )}
               </Table.Cell>
-              <Table.Cell>
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">
-                    {formatDuration(assignment.estimatedTimeMin)}
-                  </div>
-                  {assignment.order?.route && (
-                    <div className="text-xs text-gray-500">
-                      Base: {assignment.order.route.baseTimeMin}min
-                    </div>
-                  )}
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">
-                    {formatTime(assignment.estimatedCompletionTime)}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {assignment.estimatedCompletionTime && 
-                      new Date(assignment.estimatedCompletionTime) > new Date() ? 
-                      'In progress' : 'Should be complete'
-                    }
-                  </div>
-                </div>
-              </Table.Cell>
+
               <Table.Cell>
                 <AssignmentStatusIndicator 
                   assignedAt={assignment.assignedAt}
