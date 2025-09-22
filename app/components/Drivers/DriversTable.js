@@ -352,12 +352,12 @@ function DriversTableContent() {
               id="workload-filter"
               value={workloadFilter}
               onChange={(e) => setWorkloadFilter(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
             >
               <option value="">All Workloads</option>
-              <option value="available">Available (&lt;90%)</option>
-              <option value="busy">Busy (70-89%)</option>
-              <option value="at-capacity">At Capacity (≥90%)</option>
+              <option value="available" className="text-gray-900">Available (&lt;90%)</option>
+              <option value="busy" className="text-gray-900">Busy (70-89%)</option>
+              <option value="at-capacity" className="text-gray-900">At Capacity (≥90%)</option>
             </select>
           </div>
           

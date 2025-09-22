@@ -266,11 +266,11 @@ function AssignmentsTableContent() {
               id="driver-filter"
               value={filterDriver}
               onChange={(e) => setFilterDriver(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
             >
-              <option className='text-black' value="">All Drivers</option>
+              <option value="">All Drivers</option>
               {uniqueDrivers.map(driver => (
-                <option key={driver} value={driver}>{driver}</option>
+                <option key={driver} value={driver} className="text-gray-900">{driver}</option>
               ))}
             </select>
           </div>

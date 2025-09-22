@@ -435,11 +435,11 @@ function OrdersTableContent() {
               id="status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
             >
               <option value="">All Status</option>
-              <option value="assigned">Assigned</option>
-              <option value="unassigned">Unassigned</option>
+              <option value="assigned" className="text-gray-900">Assigned</option>
+              <option value="unassigned" className="text-gray-900">Unassigned</option>
             </select>
           </div>
           
@@ -451,12 +451,12 @@ function OrdersTableContent() {
               id="traffic-filter"
               value={trafficFilter}
               onChange={(e) => setTrafficFilter(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
             >
               <option value="">All Traffic Levels</option>
-              <option value="LOW">Low Traffic</option>
-              <option value="MEDIUM">Medium Traffic</option>
-              <option value="HIGH">High Traffic</option>
+              <option value="LOW" className="text-gray-900">Low Traffic</option>
+              <option value="MEDIUM" className="text-gray-900">Medium Traffic</option>
+              <option value="HIGH" className="text-gray-900">High Traffic</option>
             </select>
           </div>
           
