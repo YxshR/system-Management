@@ -122,6 +122,10 @@ function DriversTableContent() {
   const [showWeeklyHours, setShowWeeklyHours] = useState(false);
   const [showCreateDriver, setShowCreateDriver] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [sortField, setSortField] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [workloadFilter, setWorkloadFilter] = useState('');
   const { showError } = useNotification();
 
   const fetchDrivers = async () => {
@@ -163,6 +167,65 @@ function DriversTableContent() {
     setSelectedDriver(driver);
     setShowWeeklyHours(true);
   };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredAndSortedDrivers = drivers
+    .filter(driver => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          driver.name.toLowerCase().includes(searchLower) ||
+          driver.id.toString().includes(searchLower);
+        
+        if (!matchesSearch) return false;
+      }
+      
+      // Workload filter
+      if (workloadFilter) {
+        if (workloadFilter === 'available' && driver.workloadPercentage >= 90) return false;
+        if (workloadFilter === 'busy' && (driver.workloadPercentage < 70 || driver.workloadPercentage >= 90)) return false;
+        if (workloadFilter === 'at-capacity' && driver.workloadPercentage < 90) return false;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'shiftHours':
+          aValue = a.shiftHours;
+          bValue = b.shiftHours;
+          break;
+        case 'workload':
+          aValue = a.workloadPercentage;
+          bValue = b.workloadPercentage;
+          break;
+        case 'assignments':
+          aValue = a.assignmentCount;
+          bValue = b.assignmentCount;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   useEffect(() => {
     fetchDrivers();
@@ -207,6 +270,26 @@ function DriversTableContent() {
     drivers.reduce((sum, d) => sum + d.workloadPercentage, 0) / totalDrivers
   );
 
+  const SortableHeader = ({ field, children }) => (
+    <Table.HeaderCell 
+      className="cursor-pointer hover:bg-gray-100 select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center space-x-1">
+        <span>{children}</span>
+        {sortField === field && (
+          <svg 
+            className={`w-4 h-4 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} 
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        )}
+      </div>
+    </Table.HeaderCell>
+  );
+
   return (
     <div className="space-y-6">
       {/* Summary */}
@@ -237,20 +320,67 @@ function DriversTableContent() {
             </Button>
           </div>
         </div>
+        
+        {/* Filters and Search */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="search-drivers" className="block text-sm font-medium text-gray-700 mb-1">
+              Search Drivers
+            </label>
+            <div className="relative">
+              <input
+                id="search-drivers"
+                type="text"
+                placeholder="Search by name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label htmlFor="workload-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Workload
+            </label>
+            <select
+              id="workload-filter"
+              value={workloadFilter}
+              onChange={(e) => setWorkloadFilter(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">All Workloads</option>
+              <option value="available">Available (&lt;90%)</option>
+              <option value="busy">Busy (70-89%)</option>
+              <option value="at-capacity">At Capacity (≥90%)</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <div className="text-sm text-gray-500">
+              Showing {filteredAndSortedDrivers.length} of {drivers.length} drivers
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Drivers Table */}
       <Table>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Driver Name</Table.HeaderCell>
-            <Table.HeaderCell>Shift Hours</Table.HeaderCell>
+            <SortableHeader field="name">Driver Name</SortableHeader>
+            <SortableHeader field="shiftHours">Shift Hours</SortableHeader>
             <Table.HeaderCell>Past Week Hours</Table.HeaderCell>
-            <Table.HeaderCell>Assignments</Table.HeaderCell>
+            <SortableHeader field="assignments">Assignments</SortableHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {drivers.map((driver) => (
+          {filteredAndSortedDrivers.map((driver) => (
             <Table.Row key={driver.id}>
               <Table.Cell className="font-medium">
                 <div className="flex items-center">

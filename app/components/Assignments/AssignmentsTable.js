@@ -12,7 +12,7 @@ const AssignmentStatusIndicator = ({ assignedAt, estimatedCompletionTime }) => {
   const now = new Date();
   const isOverdue = estimatedCompletionTime && now > estimatedCompletionTime;
   const isRecent = assignedAt && (now - assignedAt) < (30 * 60 * 1000);
-  
+
   if (isOverdue) {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -23,7 +23,7 @@ const AssignmentStatusIndicator = ({ assignedAt, estimatedCompletionTime }) => {
       </span>
     );
   }
-  
+
   if (isRecent) {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -34,7 +34,7 @@ const AssignmentStatusIndicator = ({ assignedAt, estimatedCompletionTime }) => {
       </span>
     );
   }
-  
+
   return (
     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -51,7 +51,7 @@ const TrafficIndicator = ({ level }) => {
     'MEDIUM': 'bg-yellow-100 text-yellow-800',
     'HIGH': 'bg-red-100 text-red-800'
   };
-  
+
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors[level] || 'bg-gray-100 text-gray-800'}`}>
       {level}
@@ -97,21 +97,21 @@ function AssignmentsTableContent() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/assignments', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         setAssignments(result.data);
         setSummary(result.summary);
@@ -122,7 +122,7 @@ function AssignmentsTableContent() {
       console.error('Failed to fetch assignments:', err);
       const errorMessage = err.message || 'Network error occurred';
       setError(errorMessage);
-      
+
       showError('Failed to Load Assignments', errorMessage);
     } finally {
       setLoading(false);
@@ -149,7 +149,7 @@ function AssignmentsTableContent() {
     })
     .sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortField) {
         case 'assignedAt':
           aValue = new Date(a.assignedAt);
@@ -171,7 +171,7 @@ function AssignmentsTableContent() {
         default:
           return 0;
       }
-      
+
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -198,7 +198,7 @@ function AssignmentsTableContent() {
 
   if (error) {
     return (
-      <ErrorMessage 
+      <ErrorMessage
         title="Failed to load assignments"
         message={error}
         onRetry={fetchAssignments}
@@ -213,16 +213,16 @@ function AssignmentsTableContent() {
   }
 
   const SortableHeader = ({ field, children }) => (
-    <Table.HeaderCell 
+    <Table.HeaderCell
       className="cursor-pointer hover:bg-gray-100 select-none"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center space-x-1">
         <span>{children}</span>
         {sortField === field && (
-          <svg 
-            className={`w-4 h-4 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} 
-            fill="currentColor" 
+          <svg
+            className={`w-4 h-4 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`}
+            fill="currentColor"
             viewBox="0 0 20 20"
           >
             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -255,7 +255,7 @@ function AssignmentsTableContent() {
             </Button>
           </div>
         </div>
-        
+
         {/* Filters */}
         <div className="flex items-center space-x-4">
           <div className="flex-1 max-w-xs">
@@ -268,7 +268,7 @@ function AssignmentsTableContent() {
               onChange={(e) => setFilterDriver(e.target.value)}
               className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
-              <option value="">All Drivers</option>
+              <option className='text-black' value="">All Drivers</option>
               {uniqueDrivers.map(driver => (
                 <option key={driver} value={driver}>{driver}</option>
               ))}
@@ -360,7 +360,7 @@ function AssignmentsTableContent() {
               </Table.Cell>
 
               <Table.Cell>
-                <AssignmentStatusIndicator 
+                <AssignmentStatusIndicator
                   assignedAt={assignment.assignedAt}
                   estimatedCompletionTime={assignment.estimatedCompletionTime}
                 />
@@ -369,7 +369,7 @@ function AssignmentsTableContent() {
           ))}
         </Table.Body>
       </Table>
-      
+
       {loading && (
         <div className="flex items-center justify-center py-4">
           <LoadingSpinner size="sm" text="Updating..." />

@@ -76,6 +76,11 @@ function OrdersTableContent() {
   const [showManualAssignment, setShowManualAssignment] = useState(false);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [sortField, setSortField] = useState('id');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [trafficFilter, setTrafficFilter] = useState('');
   const { showSuccess, showError, showInfo } = useNotification();
 
   const fetchOrders = async () => {
@@ -187,6 +192,75 @@ function OrdersTableContent() {
     fetchOrders();
   };
 
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredAndSortedOrders = orders
+    .filter(order => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          order.id.toString().includes(searchLower) ||
+          order.valueRs.toString().includes(searchLower) ||
+          (order.assignment?.driver?.name || '').toLowerCase().includes(searchLower) ||
+          (order.route?.id || '').toString().includes(searchLower);
+        
+        if (!matchesSearch) return false;
+      }
+      
+      // Status filter
+      if (statusFilter) {
+        if (statusFilter === 'assigned' && !order.isAssigned) return false;
+        if (statusFilter === 'unassigned' && order.isAssigned) return false;
+      }
+      
+      // Traffic filter
+      if (trafficFilter && order.route?.trafficLevel !== trafficFilter) {
+        return false;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'id':
+          aValue = a.id;
+          bValue = b.id;
+          break;
+        case 'value':
+          aValue = a.valueRs;
+          bValue = b.valueRs;
+          break;
+        case 'deliveryTime':
+          aValue = a.deliveryTimeMin;
+          bValue = b.deliveryTimeMin;
+          break;
+        case 'driver':
+          aValue = a.assignment?.driver?.name || '';
+          bValue = b.assignment?.driver?.name || '';
+          break;
+        case 'status':
+          aValue = a.isAssigned ? 1 : 0;
+          bValue = b.isAssigned ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -234,6 +308,26 @@ function OrdersTableContent() {
   }
 
   const unassignedCount = summary?.unassignedOrders || 0;
+
+  const SortableHeader = ({ field, children }) => (
+    <Table.HeaderCell 
+      className="cursor-pointer hover:bg-gray-100 select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center space-x-1">
+        <span>{children}</span>
+        {sortField === field && (
+          <svg 
+            className={`w-4 h-4 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} 
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        )}
+      </div>
+    </Table.HeaderCell>
+  );
 
   return (
     <div className="space-y-6">
@@ -309,22 +403,85 @@ function OrdersTableContent() {
             </div>
           </div>
         )}
+        
+        {/* Filters and Search */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label htmlFor="search-orders" className="block text-sm font-medium text-gray-700 mb-1">
+              Search Orders
+            </label>
+            <div className="relative">
+              <input
+                id="search-orders"
+                type="text"
+                placeholder="Search by ID, value, driver..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Status
+            </label>
+            <select
+              id="status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">All Status</option>
+              <option value="assigned">Assigned</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </div>
+          
+          <div>
+            <label htmlFor="traffic-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Traffic
+            </label>
+            <select
+              id="traffic-filter"
+              value={trafficFilter}
+              onChange={(e) => setTrafficFilter(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">All Traffic Levels</option>
+              <option value="LOW">Low Traffic</option>
+              <option value="MEDIUM">Medium Traffic</option>
+              <option value="HIGH">High Traffic</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <div className="text-sm text-gray-500">
+              Showing {filteredAndSortedOrders.length} of {orders.length} orders
+            </div>
+          </div>
+        </div>
       </div>
 
       <Table>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Order ID</Table.HeaderCell>
-            <Table.HeaderCell>Value (Rs)</Table.HeaderCell>
+            <SortableHeader field="id">Order ID</SortableHeader>
+            <SortableHeader field="value">Value (Rs)</SortableHeader>
             <Table.HeaderCell>Route Info</Table.HeaderCell>
-            <Table.HeaderCell>Delivery Time</Table.HeaderCell>
-            <Table.HeaderCell>Status</Table.HeaderCell>
-            <Table.HeaderCell>Assigned Driver</Table.HeaderCell>
+            <SortableHeader field="deliveryTime">Delivery Time</SortableHeader>
+            <SortableHeader field="status">Status</SortableHeader>
+            <SortableHeader field="driver">Assigned Driver</SortableHeader>
             <Table.HeaderCell>Actions</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {orders.map((order) => (
+          {filteredAndSortedOrders.map((order) => (
             <Table.Row key={order.id} className={order.isAssigned ? 'bg-green-50' : 'bg-yellow-50'}>
               <Table.Cell className="font-medium">
                 #{order.id}
